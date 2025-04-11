@@ -4,10 +4,12 @@
  * Licensed under MIT
  */
 
-import WebSocketTracker from 'bittorrent-tracker/lib/client/websocket-tracker.js'
-import EventEmitter from 'events'
-import Debug from 'debug'
-import { randomBytes, arr2hex, hex2bin, hex2arr, hash, arr2text } from 'uint8-util'
+const  WebSocketTracker = require('bittorrent-tracker/lib/client/websocket-tracker.js');
+const EventEmitter = require('events');
+const Debug = require('debug');
+
+const { randomBytes, arr2hex, hex2bin, hex2arr, hash, arr2text } = require('uint8-util');
+
 
 const debug = Debug('p2pt')
 
@@ -23,15 +25,17 @@ const JSON_MESSAGE_IDENTIFIER = '^'
  */
 const MAX_MESSAGE_LENGTH = 16000
 
-export default class P2PT extends EventEmitter {
+module.exports = class P2PT extends EventEmitter {
   /**
    *
    * @param array announceURLs List of announce tracker URLs
    * @param string identifierString Identifier used to discover peers in the network
+   * @param array iceServers List of STUN/TURN server configurations
    */
-  constructor (announceURLs = [], identifierString = '') {
+  constructor (announceURLs = [], identifierString = '', iceServers = []) {
     super()
 
+    this.iceServers = iceServers
     this.announceURLs = announceURLs
     this.trackers = {}
     this.peers = {}
@@ -69,6 +73,7 @@ export default class P2PT extends EventEmitter {
         newpeer = true
         this.peers[peer.id] = {}
         this.responseWaiting[peer.id] = {}
+        peer.config = { iceServers: this.iceServers }
       }
 
       peer.on('connect', () => {
